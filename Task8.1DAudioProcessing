@@ -1,0 +1,52 @@
+import speech_recognition as sr
+import RPi.GPIO as GPIO
+import time
+
+# GPIO setup
+GPIO.setmode(GPIO.BOARD)
+LED_PIN = 18 
+GPIO.setup(LED_PIN, GPIO.OUT)
+
+# Function to turn the LED on
+def turn_on_led():
+    GPIO.output(LED_PIN, GPIO.HIGH)
+    print("LED is ON")
+
+# Function to turn the LED off
+def turn_off_led():
+    GPIO.output(LED_PIN, GPIO.LOW)
+    print("LED is OFF")
+
+# Function to listen to voice commands
+def listen_for_commands():
+    recognizer = sr.Recognizer()
+    microphone = sr.Microphone()
+
+    with microphone as source:
+        print("Say something!")
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+
+    try:
+        command = recognizer.recognize_google(audio).lower()
+        print("You said:", command)
+        if "turn on" in command:
+            turn_on_led()
+        elif "turn off" in command:
+            turn_off_led()
+        else:
+            print("Command not recognized")
+
+    except sr.UnknownValueError:
+        print("Could not understand audio")
+    except sr.RequestError as e:
+        print("Error fetching results; {0}".format(e))
+
+# Main loop
+try:
+    while True:
+        listen_for_commands()
+        time.sleep(1)  # Adjust this delay as needed
+
+except KeyboardInterrupt:
+    GPIO.cleanup()  # Clean up GPIO on Ctrl+C exit
